@@ -7,10 +7,6 @@ class Chromosome  {
         return this.list;
     }
 
-    getFitness() {
-        return this.fitness;
-    }
-
     setFitness(value) {
         this.fitness = value;
     }
@@ -56,11 +52,18 @@ class Genetic {
         this.population.sort(function comp(a, b) {
             return b.fitness - a.fitness;
         });
+        let mutation = (Math.floor(Math.random() * 2) + 0) === 1;
         let list = this.population;
         let population = [];
         for (let i = 0; i < list.length; i++) {
             for (let j = 1; j < list.length; j++) {
-                let chromosome = list[i].getList().slice(0, parseInt(list[i].getList().length / 2)).concat(list[j].getList().slice(parseInt(list[j].getList().length / 2), list[j].getList().length));
+                let chromosome;
+                chromosome = list[i].getList().slice(0, parseInt(list[i].getList().length / 2)).concat(list[j].getList().slice(parseInt(list[j].getList().length / 2), list[j].getList().length));
+
+                if (mutation) {
+                    chromosome[2] = new Gene(1, 60);
+                    chromosome[5] = new Gene(1, 60);
+                }
                 chromosome.sort(function order(a, b){
                     return a - b;
                 });
@@ -130,13 +133,65 @@ function filterNineOrZero(chromosome) {
     return 1;
 }
 
+function filterAvoidTheseNumbers(chromosome) {
+    let list = chromosome.getList();
+    let numbers = [1, 2, 3, 11, 22, 44, 55, 48, 57];
+    for (let gene of list) {
+        for (let number of numbers) {
+            if (number === gene) {
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
+function filterConsecutive(chromosome) {
+    let list = chromosome.getList();
+    for (let i = 1; i < list.length; i++) {
+        if (list[i] - list[i + 1] === -1) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+function filterColumn(chromosome) {
+    let list = chromosome.getList();
+    for (let gene of list) {
+        let count = 0;
+        let gTest = (gene + '');
+        gTest = gTest.substring(gTest.length > 1 ? 2 : 0, 1);
+        for (let num of list) {
+            let nTest = (num + '');
+            nTest = nTest.substring(nTest.length > 1 ? 2 : 0, 1);
+            if (gTest === nTest ) {
+                count++;
+            }
+        }
+        if (count > 1) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 function main() {
-    let genetic = new Genetic(80, 6, [filterRepeatedNumbers, filterNineOrZero]);
+    let genetic = new Genetic(300, 6, [
+        filterRepeatedNumbers,
+        filterNineOrZero,
+        filterAvoidTheseNumbers,
+        filterConsecutive,
+        filterColumn
+    ]);
     genetic.initPopulation();
     genetic.fitnessCalculation();
     let qnt = 0;
     let end = false;
-    while (qnt < 10 && !end) {
+    while (qnt < 100 && !end) {
         if (genetic.getResult()){
             end = true;
         } else {
@@ -159,6 +214,8 @@ function main() {
             }
             document.getElementById('Lottery').innerHTML += `<p>${number}</p>`;
         }
+    } else {
+        main();
     }
 }
 
