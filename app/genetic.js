@@ -72,10 +72,6 @@ class Genetic {
 
     }
 
-    getPopulation() {
-        return this.population;
-    }
-
     fitnessCalculation() {
         for (let chromosome of this.population) {
             let fitness = 0;
@@ -105,25 +101,6 @@ class Genetic {
 }
 
 
-function filterPrimeNumbers(chromosome) {
-   let list = chromosome.getList();
-   let max = 3;
-   let count = 0;
-   for (let gene of list) {
-       let isPrime = true;
-       for(let i = 2; i < gene; i++)
-           if(gene % i === 0) isPrime = false;
-       if(gene > 1 && isPrime) {
-           count++;
-       }
-   }
-   if (count > max) {
-       return 0;
-   }
-
-   return 1;
-}
-
 function filterRepeatedNumbers(chromosome) {
     let list = chromosome.getList();
     for (let gene of list) {
@@ -141,13 +118,25 @@ function filterRepeatedNumbers(chromosome) {
     return 1;
 }
 
+function filterNineOrZero(chromosome) {
+    let list = chromosome.getList();
+    for (let gene of list) {
+        let str = gene + '';
+        if (str.length > 1 && (str.substring(2, 1) === '0' || str.substring(2, 1) === '9') ) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 function main() {
-    let genetic = new Genetic(10, 6, [filterPrimeNumbers, filterRepeatedNumbers]);
+    let genetic = new Genetic(80, 6, [filterRepeatedNumbers, filterNineOrZero]);
     genetic.initPopulation();
     genetic.fitnessCalculation();
     let qnt = 0;
     let end = false;
-    while (qnt < 50 && !end) {
+    while (qnt < 10 && !end) {
         if (genetic.getResult()){
             end = true;
         } else {
@@ -157,20 +146,20 @@ function main() {
         }
     }
     console.log(genetic.getResult());
-    document.getElementById('Lottery').innerHTML = '';
-    for (let item of genetic.getResult()) {
-        let number = '';
-        for (let j of item.getList()){
-            if (number === '')
-                number += '' + j;
-            else
-                number += ' - ' + j;
+    if (genetic.getResult()){
+        document.getElementById('Lottery').innerHTML = '';
+        for (let item of genetic.getResult()) {
+            let number = '';
+            for (let j of item.getList()){
+                if (number === '')
+                    number += '' + j;
+                else
+                    number += ' - ' + j;
 
+            }
+            document.getElementById('Lottery').innerHTML += `<p>${number}</p>`;
         }
-        document.getElementById('Lottery').innerHTML += `<p>${number}</p>`;
     }
-
-
 }
 
 main();
